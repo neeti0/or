@@ -56,3 +56,4 @@ end
 vert=[PT,Fx]
 [fxval,indfx]=max(vert)
 optval=vert(indfx,:);
+optbfs=array2table(optval);
