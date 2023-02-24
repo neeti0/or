@@ -46,7 +46,7 @@ points(:,Y1)=[];
 X1= points(1,:);
 X2= points(2,:);
 Y2= find(((2*X1)+(1*X2))>8)
-points(:,Y1)=[];
+points(:,Y2)=[];
 PT=points
 PT=unique(PT,'rows');
 
