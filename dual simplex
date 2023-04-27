@@ -1,0 +1,40 @@
+cost = [-2 0 -1 0 0 0];
+A = [-1 -1 1 1 0 -5; -1 2 -4 0 1 -6];
+b = [4; 5];
+Var = {'x_1', 'x_2', 'x_3', 's_1', 's_2', 'sol'};
+
+zjcj = cost(b)*A-cost;
+
+RUN = true;
+
+while RUN
+    if any(A(:,size(A,2)) < 0)
+        fprintf("The current BFS is not feasible")
+        [lvg_val,pvt_row] = min(A(:,size(A,2)));
+        m = zeros(1,size(A,2)-1);
+        for i = 1:size(A,2)-1
+            if A(pvt_row,i)<0
+                m(i) = zjcj(i)/A(pvt_row,i);
+            else
+                m(i)=-inf;
+            end
+        end
+        [ent_val,pvt_col] = max(m);
+
+        pvt_key = A(pvt_row,pvt_col);
+
+        A(pvt_row,:) = A(pvt_row,:)/pvt_key;
+        for i=1:size(A,1)
+            if i~=pvt_row
+                A(i,:) = A(i,:) - A(i,pvt_col)*A(pvt_row,:);
+            end
+        end
+
+        b(pvt_row) = pvt_col;
+        zjcj = zjcj-zjcj.*A(pvt_row,:);
+        zjcj=[zjcj;A];
+        array2table(zjcj,'VariableNames',Var)
+    else
+        RUN = false;
+    end
+end
