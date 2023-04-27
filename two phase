@@ -1,0 +1,130 @@
+% example we are taking for two method is 
+% minimize z = 7.5x1 - 3x2
+% subject to constraint
+% 3x1 - x2 - x3 >= 3
+% x1 - x2 + x3 >= 2
+% x1,x2,x3.=0
+
+Variables = {'x1','x2','x3','s1','s2','a1','a2','sol'};
+output_variables = {'x1','x2','x3','s1','s2','sol'};
+
+original_c = [-7.5 3 0 0 0 -1 -1 0];
+info       = [3 -1 -1 -1 0 1 0 3;1 -1 1 0 -1 0 1 2];
+b          = [3;2];
+basic_variable = [6 7];
+
+% Phase I 
+artificial_cost = [0 0 0 0 0 -1 -1 0];
+A               = info;
+startBV         = find(artificial_cost<0);
+
+% compute zj - cj
+zjcj = artificial_cost(startBV)*A - artificial_cost;
+
+ITable = array2table([zjcj;A]);
+ITable.Properties.VariableNames(1:size(A,2)) = Variables
+
+fprintf("Phase I started \n");
+
+RUN = true;
+while RUN == true;
+      zc = zjcj(1,1:end-1);
+
+      if any(zc<0);
+           % find the entering variable
+      [Enter_col,pvt_col] = min(zc);
+      fprintf("entering column %d \n",Enter_col);
+
+    % find the minimum ratio now for finding the leaving variable 
+      sol = A(:,end);
+      Column = A(:,pvt_col);
+        if Column<=0
+           fprintf("Unbounded Solution!!! \n")
+        else
+             for i = 1:size(A,1);
+                if Column(i)>0
+                  ratio(i) = sol(i)./Column(i);
+                else
+                  ratio(i) = inf;
+                end
+             end
+             [minratio,pvt_row] = min(ratio);
+             fprintf("leaving row is %d",pvt_row)
+         end
+         % update the bfs
+         basic_variable(pvt_row) = pvt_col;
+         % pivot key
+         pvt_key = A(pvt_row,pvt_col);
+         % update the enteries
+         A(pvt_row,:) = A(pvt_row,:)./pvt_key;
+         for i=1:size(A,1)
+             if i~=pvt_row
+                A(i,:) = A(i,:)-A(i,pvt_col).*A(pvt_row,:);
+             end
+         end
+         zjcj = zjcj - zjcj(1,pvt_col).*A(pvt_row,:);
+         ITable = array2table([zjcj;A]);
+          ITable.Properties.VariableNames(1:size(A,2)) = Variables
+      else
+      RUN = false;
+
+ 
+      BFS = basic_variable;
+      fprintf("Basic Variables for optimal solution is %d \n",BFS)
+      fprintf("Phase I ended!!!! \n")
+      end
+end
+
+
+fprintf("Phase II started \n")
+
+A(:,startBV) = [];  % removing the artificial variables from A marix
+original_c(:,startBV) = []; % removing artificial variables from cost
+
+
+RUN = true;
+while RUN == true;
+      zc = zjcj(1,1:end-1);
+
+      if any(zc<0);
+     
+      % find the entering variable
+      [Enter_col,pvt_col] = min(zc);
+      fprintf("entering column %d \n",Enter_col);
+
+    % find the minimum ratio now for finding the leaving
+variable 
+      sol = A(:,end);
+      Column = A(:,pvt_col);
+        if Column<=0
+           fprintf("Unbounded Solution!!! \n")
+        else
+             for i = 1:size(A,1);
+                if Column(i)>0
+                  ratio(i) = sol(i)./Column(i);
+                else
+                  ratio(i) = inf;
+                end
+             end
+             [minratio,pvt_row] = min(ratio);
+             fprintf("leaving row is %d",pvt_row)
+         end
+         % update the bfs
+         basic_variable(pvt_row) = pvt_col;
+         % pivot key
+         pvt_key = A(pvt_row,pvt_col);
+         % update the enteries
+         A(pvt_row,:) = A(pvt_row,:)./pvt_key;
+         for i=1:size(A,1)
+             if i~=pvt_row
+                A(i,:) = A(i,:)-A(i,pvt_col).*A(pvt_row,:);
+             end
+         end
+         zjcj = zjcj - zjcj(1,pvt_col).*A(pvt_row,:);
+      else
+      RUN = false;
+      BFS = basic_variable;
+      fprintf("Basic Variables for optimal solution is %d \n",BFS)
+      fprintf("Phase II ended!!!! \n")
+      end
+end
